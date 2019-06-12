@@ -6,7 +6,10 @@ extern "C" {
 #endif
 
 #include "stm32f1xx_hal.h"
+#include "stm32f1xx_hal_uart.h"
+
 #include "queue32.h"
+#include "midi-uart.h"
 
 void Error_Handler(void);
 #define BOOT1_Pin 			GPIO_PIN_2
@@ -30,6 +33,8 @@ void onNoteOff		(uint8_t ch, uint8_t note, uint8_t vel);
 void onCtlChange	(uint8_t ch, uint8_t num, uint8_t value);
 
 extern stB4Arrq rxq;
+
+
 
 #ifdef __cplusplus
 }

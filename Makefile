@@ -23,7 +23,8 @@ TARGET = USB-Audio
 DEBUG = 1
 # optimization
 OPT = -Og
-
+FLASHTOOL = /usr/bin/stm32flash
+SERIALPORT = /dev/ttyUSB0
 
 #######################################
 # paths
@@ -42,6 +43,7 @@ Src/usbd_conf.c \
 Src/usbd_desc.c \
 Src/usbd_midi.c \
 Src/usbd_midi_if.c \
+Src/midi-uart.c \
 Src/stm32f1xx_it.c \
 Src/stm32f1xx_hal_msp.c \
 Src/queue32.c \
@@ -193,7 +195,12 @@ $(BUILD_DIR):
 #######################################
 clean:
 	-rm -fR $(BUILD_DIR)
-  
+
+flash-write: 
+	sudo $(FLASHTOOL) -w $(BUILD_DIR)/$(TARGET).hex $(SERIALPORT)
+
+flash: all flash-write
+	
 #######################################
 # dependencies
 #######################################

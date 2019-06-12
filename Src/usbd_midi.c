@@ -315,6 +315,18 @@ static uint8_t  USBD_MIDI_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
 	return USBD_OK;
 }
 
+static uint8_t MIDI_TX_Buffer  [MIDI_USB_RING_SIZE*MIDI_USB_MSG_SIZE]  = {0};
+void USBD_MIDI_DumpRingBuffer ()
+{
+	uint16_t delta = MIDI_Message_Ring_Dump(MIDI_TX_Buffer);
+	if (delta)
+	{
+	    USB_Tx_State = 1;
+	    USBD_LL_Transmit (pInstance, USB_EP_IN_ADDR_1,
+	    		MIDI_TX_Buffer, delta);
+	}
+}
+/*
 void USBD_MIDI_SendPacket (){
   uint16_t USB_Tx_ptr;
   uint16_t USB_Tx_length;
@@ -350,7 +362,7 @@ void USBD_MIDI_SendPacket (){
     USBD_LL_Transmit (pInstance, USB_EP_IN_ADDR_1,(uint8_t*)&APP_Rx_Buffer[USB_Tx_ptr],USB_Tx_length);
   }
 }
-
+*/
 // -----------------------------------------------------------------------------
 static uint8_t  *USBD_MIDI_GetCfgDesc (uint16_t *length)
 {

@@ -11,13 +11,6 @@ UART_HandleTypeDef huart2;
 
 static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART2_UART_Init(void);
-
-
-//uint16_t ledTime;
-uint8_t notes[] = {60,38,40,43,45,48}; // C2 D2 E2 G2 A2 C3
-uint8_t onoff[] = {0,0,0,0,0,0};
-uint8_t seq[] = {0,0,0,0,0,0};
 
 
 int main(void)
@@ -25,17 +18,24 @@ int main(void)
 	HAL_Init();
 	SystemClock_Config();
 	MX_GPIO_Init();
+
+	MIDI_UART_RingInit();
+	MX_USART1_UART_Init();
 	MX_USART2_UART_Init();
+	MX_USART3_UART_Init();
+	HAL_UART_MspInit(&huart1);
+	HAL_UART_MspInit(&huart2);
+	HAL_UART_MspInit(&huart3);
 	MX_USB_DEVICE_Init();
 
 	mimuz_init();
-//	setHdlNoteOff(onNoteOff);
-//	setHdlNoteOn(onNoteOn);
-//	setHdlCtlChange(onCtlChange);
+	setHdlNoteOff(onNoteOff);
+	setHdlNoteOn(onNoteOn);
+	setHdlCtlChange(onCtlChange);
 
 	while (1)
 	{
-//		processMidiMessage();
+		processMidiMessage();
 	}
 }
 
@@ -43,18 +43,8 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if (GPIO_Pin == BUTTON_Pin)
 	{
-		if (BUTTON_PRESSED)
-		{
-            sendNoteOn(0,64,100);
-            processMidiMessage();
-//			led_on();
-		}
-		else
-		{
-            sendNoteOff(0,64);
-    		processMidiMessage();
-//			led_off();
-		}
+		(BUTTON_PRESSED) ? led_on(): led_off();
+		(BUTTON_PRESSED) ? sendNoteOn(0, 0x48, 108): sendNoteOff(0, 0x48);
 	}
 }
 
@@ -76,10 +66,12 @@ void onNoteOn(uint8_t ch, uint8_t note, uint8_t vel){
   led_on();
 }
 
-void onNoteOff(uint8_t ch, uint8_t note, uint8_t vel){
-  led_off();
+void onNoteOff(uint8_t ch, uint8_t note, uint8_t vel)
+{
+  (note%2)? led_on():led_off();
 }
-void onCtlChange(uint8_t ch, uint8_t num, uint8_t value) {}
+void onCtlChange(uint8_t ch, uint8_t num, uint8_t value)
+{ led_off(); }
 
 
 void SystemClock_Config(void)
@@ -160,21 +152,6 @@ static void MX_GPIO_Init(void)
   HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
-static void MX_USART2_UART_Init(void)
-{
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 115200;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-}
 void Error_Handler(void)
 {
 }

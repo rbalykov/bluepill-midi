@@ -26,14 +26,19 @@
 	</natures>
 	<linkedResources>
 		<link>
+			<name>Inc/midi-uart.h</name>
+			<type>1</type>
+			<locationURI>/home/pi/devel/neutrino-midi/Inc/midi-uart.h</locationURI>
+		</link>
+		<link>
 			<name>Src/usbd_midi.c</name>
 			<type>1</type>
-			<location>/home/pi/devel/USB-Audio/Src/usbd_midi.c</location>
+			<location>/home/pi/devel/neutrino-midi/Src/usbd_midi.c</location>
 		</link>
 		<link>
 			<name>Src/usbd_midi_if.c</name>
 			<type>1</type>
-			<location>/home/pi/devel/USB-Audio/Src/usbd_midi_if.c</location>
+			<location>/home/pi/devel/neutrino-midi/Src/usbd_midi_if.c</location>
 		</link>
 	</linkedResources>
 </projectDescription>

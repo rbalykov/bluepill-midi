@@ -31,7 +31,7 @@ typedef struct
 typedef struct
 {
 	uint16_t (*RX)	(uint8_t *msg, uint16_t length);
-	uint16_t (*TX)	(uint8_t *msg, uint16_t length);
+//	uint16_t (*TX)	(uint8_t *msg, uint16_t length);
 }USBD_MIDI_ItfTypeDef;
 
 uint8_t  USBD_MIDI_RegisterInterface (USBD_HandleTypeDef   *pdev,
@@ -47,6 +47,8 @@ extern uint32_t APP_Rx_ptr_in;
 extern uint32_t APP_Rx_ptr_out;
 extern uint32_t APP_Rx_length;
 extern uint8_t  USB_Tx_State;
+
+void USBD_MIDI_DumpRingBuffer	(void);
 
 extern USBD_ClassTypeDef  USBD_MIDI;
 #define USBD_MIDI_CLASS    &USBD_MIDI
