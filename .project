@@ -26,9 +26,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>Inc/midi-uart.h</name>
+			<name>Inc/midi_uart.h</name>
 			<type>1</type>
-			<locationURI>/home/pi/devel/neutrino-midi/Inc/midi-uart.h</locationURI>
+			<location>/home/pi/devel/neutrino-midi/Inc/midi_uart.h</location>
 		</link>
 		<link>
 			<name>Src/usbd_midi.c</name>

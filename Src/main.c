@@ -11,7 +11,7 @@ UART_HandleTypeDef huart2;
 
 static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-
+uint8_t sendNotes = 0;
 
 int main(void)
 {
@@ -19,33 +19,40 @@ int main(void)
 	SystemClock_Config();
 	MX_GPIO_Init();
 
-	MIDI_UART_RingInit();
-	MX_USART1_UART_Init();
-	MX_USART2_UART_Init();
-	MX_USART3_UART_Init();
-	HAL_UART_MspInit(&huart1);
-	HAL_UART_MspInit(&huart2);
-	HAL_UART_MspInit(&huart3);
 	MX_USB_DEVICE_Init();
+	MIDI_UART_Init();
 
-	mimuz_init();
-	setHdlNoteOff(onNoteOff);
-	setHdlNoteOn(onNoteOn);
-	setHdlCtlChange(onCtlChange);
-
+	volatile uint32_t delay;
+	static uint8_t count=0;
 	while (1)
 	{
-		processMidiMessage();
+		count++;
+		delay = 0xFFFFFF; while (--delay){}
+		sendNoteOn (0, 0x00+(count&0xF), (0x60+(count&0xF)));
+		sendNoteOn (0, 0x10+(count&0xF), (0x60+(count&0xF)));
+		sendNoteOn (0, 0x20+(count&0xF), (0x60+(count&0xF)));
+		sendNoteOn (0, 0x30+(count&0xF), (0x60+(count&0xF)));
+		sendNoteOn (0, 0x40+(count&0xF), (0x60+(count&0xF)));
+		sendNoteOn (0, 0x50+(count&0xF), (0x60+(count&0xF)));
+
+		delay = 0xFFFFFF; while (--delay){}
+		sendNoteOff(0, 0x48);
 	}
 }
 
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
+	static uint8_t count=0;
+	HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
 	if (GPIO_Pin == BUTTON_Pin)
 	{
+//		sendNotes = (BUTTON_PRESSED);
+		count += BUTTON_PRESSED ? 1 : 0;
 		(BUTTON_PRESSED) ? led_on(): led_off();
-		(BUTTON_PRESSED) ? sendNoteOn(0, 0x48, 108): sendNoteOff(0, 0x48);
+		(BUTTON_PRESSED) ? sendNoteOn (0, 0x40+(count&0xF), (0x60+(count&0x7F)))
+						 : sendNoteOff(0, 0x40+(count&0xF));
 	}
+	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
 // -----------------------------------------------------------------------------

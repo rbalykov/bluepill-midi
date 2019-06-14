@@ -13,7 +13,7 @@
 ######################################
 # target
 ######################################
-TARGET = USB-Audio
+TARGET = neutrino-midi
 
 
 ######################################
@@ -23,14 +23,14 @@ TARGET = USB-Audio
 DEBUG = 1
 # optimization
 OPT = -Og
-FLASHTOOL = /usr/bin/stm32flash
-SERIALPORT = /dev/ttyUSB0
 
 #######################################
 # paths
 #######################################
 # Build path
 BUILD_DIR = build
+FLASHTOOL = /usr/bin/stm32flash
+SERIALPORT = /dev/ttyUSB0
 
 ######################################
 # source
@@ -43,7 +43,7 @@ Src/usbd_conf.c \
 Src/usbd_desc.c \
 Src/usbd_midi.c \
 Src/usbd_midi_if.c \
-Src/midi-uart.c \
+Src/midi_uart.c \
 Src/stm32f1xx_it.c \
 Src/stm32f1xx_hal_msp.c \
 Src/queue32.c \

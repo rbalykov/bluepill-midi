@@ -107,7 +107,7 @@
 
 /****************************************/
 /* #define for FS and HS identification */
-#define DEVICE_FS 		0
+#define DEVICE_FS 		1
 
 /**
   * @}

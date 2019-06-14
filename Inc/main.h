@@ -9,7 +9,7 @@ extern "C" {
 #include "stm32f1xx_hal_uart.h"
 
 #include "queue32.h"
-#include "midi-uart.h"
+#include "midi_uart.h"
 
 void Error_Handler(void);
 #define BOOT1_Pin 			GPIO_PIN_2

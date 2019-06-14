@@ -7,6 +7,19 @@
 
 #include "main.h"
 #include <string.h>
+#include "midi_uart.h"
+#include "queue32.h"
+#include "usbd_midi.h"
+#include "usbd_core.h"
+
+stB4Arrq qDataOut;
+stB4Arrq qDataIn;
+
+static uint8_t MIDI_Ring_Buffer[MIDI_USB_RING_SIZE]		[MIDI_USB_MSG_SIZE] = {0};
+static uint16_t 	MIDI_Ring_PtrNext = 0,
+					MIDI_Ring_Queue	  = 0;
+
+extern USBD_HandleTypeDef *pInstance;
 
 // UART Hardware
 void MIDI_UART_IRQHandler(UART_HandleTypeDef *huart);
@@ -14,68 +27,9 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 UART_HandleTypeDef huart3;
 
-static uint8_t MIDI_Ring_Buffer[MIDI_USB_RING_SIZE]		[MIDI_USB_MSG_SIZE] = {0};
-static uint16_t 	MIDI_Ring_PtrNext = 0,
-					MIDI_Ring_Queue	  = 0;
-
-
-typedef struct {
-	uint8_t RingBuffer [MIDI_UART_RING_SIZE];
-	uint8_t RingQueue;
-	uint8_t OffsetPush;
-	uint8_t OffsetPop;
-}MIDI_UART_Handler_t;
-
-MIDI_UART_Handler_t TX_RingBuffer[MIDI_UART_PORT_COUNT];
-
-
-// -----------------------------------------------------------------------------
-void MIDI_UART_RingInit(void)
-{
-	for (uint8_t i=0; i<MIDI_UART_PORT_COUNT; i++)
-	{
-		memset(TX_RingBuffer[i].RingBuffer, 0, MIDI_UART_RING_SIZE);
-		TX_RingBuffer[i].OffsetPop 	= 0;
-		TX_RingBuffer[i].OffsetPush = 0;
-		TX_RingBuffer[i].RingQueue 	= 0;
-	}
-}
-
-uint8_t	MIDI_TX_Push 	(uint8_t port, uint8_t *byte)
-{
-	if (port >= MIDI_UART_PORT_COUNT) return 0;
-
-	if (TX_RingBuffer[port].RingQueue >= MIDI_UART_RING_SIZE)
-	{
-		TX_RingBuffer[port].RingQueue 	  = MIDI_UART_RING_SIZE;
-		if (++TX_RingBuffer[port].OffsetPop >= MIDI_UART_RING_SIZE)
-		   	 {TX_RingBuffer[port].OffsetPop  = 0;}
-		// put overflow handler here or just lose a byte
-	}
-
-	TX_RingBuffer[port].RingBuffer [TX_RingBuffer[port].OffsetPush] = byte[0];
-	if (++TX_RingBuffer[port].OffsetPush >= MIDI_UART_RING_SIZE)
-	   	 {TX_RingBuffer[port].OffsetPush  = 0;}
-	if (++TX_RingBuffer[port].RingQueue  >= MIDI_UART_RING_SIZE)
-	   	 {TX_RingBuffer[port].RingQueue   = MIDI_UART_RING_SIZE;}
-
-	return 1;
-}
-
-uint8_t	MIDI_TX_Pop 	(uint8_t port, uint8_t *byte)
-{
-	if (port >= MIDI_UART_PORT_COUNT) 		return 0;
-	if (TX_RingBuffer[port].RingQueue == 0)	return 0;
-
-	byte[0] = TX_RingBuffer[port].RingBuffer [TX_RingBuffer[port].OffsetPop];
-
-	if (++TX_RingBuffer[port].OffsetPop >= MIDI_UART_RING_SIZE)
-	   	 {TX_RingBuffer[port].OffsetPop  = 0;}
-
-	--TX_RingBuffer[port].RingQueue;
-
-	return 1;
-}
+uint16_t MIDI_Message_Ring_Push (uint8_t * message);
+uint16_t MIDI_Message_Ring_Dump (uint8_t *whereTo);
+uint16_t MIDI_Message_Ring_Queue 	(void);
 
 void MIDI_UART_IRQHandler(UART_HandleTypeDef *huart)
 {
@@ -105,13 +59,47 @@ void MIDI_UART_IRQHandler(UART_HandleTypeDef *huart)
 			// code here
 			__HAL_UART_CLEAR_FLAG (huart, UART_FLAG_TC);
 		}
-
 	}
 }
 
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
+uint8_t	MIDI_DataIn_NonEmpty ()
+{
+	return (uint8_t) (qDataIn.num != 0);
+//	return MIDI_Ring_Queue;
+}
+
+inline uint16_t	MIDI_DataIn_Push 	(uint8_t *message)
+{
+	return b4arrq_push(&qDataIn, (uint32_t *)message);
+//	return MIDI_Message_Ring_Push (message);
+//	USBD_LL_Transmit (pInstance, USB_EP_IN_ADDR_1, message, 4); return 1;
+}
+
+uint16_t MIDI_DataIn_Dump 	(uint8_t *where_to)
+{
+//	return MIDI_Message_Ring_Dump (where_to);
+
+	uint16_t delta = 0;
+	uint32_t *pop = 0;
+
+	while (MIDI_IN_PACKET_SIZE - delta >= MIDI_USB_MSG_SIZE)
+	{
+		pop = b4arrq_pop (&qDataIn);
+		if (!pop)
+		{
+			return delta;
+		}
+		memcpy (where_to + delta, pop, MIDI_USB_MSG_SIZE);
+		delta += MIDI_USB_MSG_SIZE;
+	}
+	return delta;
+
+}
+
+uint16_t MIDI_Message_Ring_Queue 	(void)
+{
+	return MIDI_Ring_Queue;
+}
 
 uint16_t MIDI_Message_Ring_Push (uint8_t * message)
 {
@@ -151,6 +139,52 @@ uint16_t MIDI_Message_Ring_Dump (uint8_t *whereTo)
 
 }
 
+void 	MIDI_UART_Init		(void)
+{
+	b4arrq_init(&qDataIn);
+	b4arrq_init(&qDataOut);
+
+	MX_USART1_UART_Init();
+	MX_USART2_UART_Init();
+	MX_USART3_UART_Init();
+	HAL_UART_MspInit(&huart1);
+	HAL_UART_MspInit(&huart2);
+	HAL_UART_MspInit(&huart3);
+}
+
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+// -----------------------------------------------------------------------------
+
+void sendNoteOn(uint8_t ch, uint8_t note, uint8_t vel)
+{
+	uint8_t message[MIDI_USB_MSG_SIZE];
+	message[0] = MIDI_USB_PREAMBLE	(MIDI_CABLE_0, MIDI_CIN_NOTE_ON);
+	message[1] = MIDI_EVENT_HEADER	(MIDI_EVENT_NOTE_ON,ch);
+	message[2] = MIDI_TRIM			(note);
+	message[3] = MIDI_TRIM			(vel);
+	MIDI_DataIn_Push (message);
+}
+
+void sendNoteOff(uint8_t ch, uint8_t note)
+{
+	uint8_t message[MIDI_USB_MSG_SIZE];
+	message[0] = MIDI_USB_PREAMBLE	(MIDI_CABLE_0, MIDI_CIN_NOTE_OFF);
+	message[1] = MIDI_EVENT_HEADER	(MIDI_EVENT_NOTE_OFF, ch);
+	message[2] = MIDI_TRIM			(note);
+	message[3] = 0;
+	MIDI_DataIn_Push (message);
+}
+
+void sendCtlChange(uint8_t ch, uint8_t ctl, uint8_t value)
+{
+	uint8_t message[MIDI_USB_MSG_SIZE];
+	message[0] = MIDI_USB_PREAMBLE	(MIDI_CABLE_0, MIDI_CIN_CONTROL);
+	message[1] = MIDI_EVENT_HEADER	(MIDI_EVENT_CONTROL, ch);
+	message[2] = MIDI_TRIM			(ctl);
+	message[3] = MIDI_TRIM			(value);
+	MIDI_DataIn_Push (message);
+}
 
 void USART1_IRQHandler(void)
 	{ MIDI_UART_IRQHandler(&huart1); 		}

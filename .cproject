@@ -62,6 +62,18 @@
                         </toolChain>
                         					
                     </folderInfo>
+                    					
+                    <fileInfo id="0.124507274.190600162" name="fragments.c" rcbsApplicability="disable" resourcePath="Src/fragments.c" toolsToInvoke="org.eclipse.cdt.build.core.settings.holder.1202943643.997839486">
+                        						
+                        <tool id="org.eclipse.cdt.build.core.settings.holder.1202943643.997839486" name="GNU C" superClass="org.eclipse.cdt.build.core.settings.holder.1202943643"/>
+                        					
+                    </fileInfo>
+                    					
+                    <sourceEntries>
+                        						
+                        <entry excluding="Src/fragments.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+                        					
+                    </sourceEntries>
                     				
                 </configuration>
                 			
@@ -93,7 +105,15 @@
     	
     <storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
     	
-    <storageModule moduleId="refreshScope"/>
+    <storageModule moduleId="refreshScope" versionNumber="2">
+        		
+        <configuration configurationName="Default">
+            			
+            <resource resourceType="PROJECT" workspacePath="/neutrino-midi"/>
+            		
+        </configuration>
+        	
+    </storageModule>
     	
     <storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
         		

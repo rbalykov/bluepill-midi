@@ -1,5 +1,6 @@
 
 #include "usbd_midi.h"
+#include "usdb_midi_if.h"
 #include "usbd_desc.h"
 #include "usbd_ctlreq.h"
 
@@ -12,14 +13,13 @@ static uint8_t  USBD_MIDI_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum);
 static uint8_t  USBD_MIDI_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum);
 static uint8_t  *USBD_MIDI_GetCfgDesc (uint16_t *length);
 static uint8_t  *USBD_MIDI_GetDeviceQualifierDesc (uint16_t *length);
+static uint8_t  USBD_MIDI_SOF_Callback (USBD_HandleTypeDef *pdev);
 
-uint32_t APP_Rx_ptr_in  = 0;
-uint32_t APP_Rx_ptr_out = 0;
-uint32_t APP_Rx_length  = 0;
+
 uint8_t  USB_Tx_State = 0;
 
-__ALIGN_BEGIN uint8_t USB_Rx_Buffer[MIDI_OUT_PACKET_SIZE] __ALIGN_END ;
-__ALIGN_BEGIN uint8_t APP_Rx_Buffer[APP_RX_DATA_SIZE] __ALIGN_END ;
+__ALIGN_BEGIN uint8_t MIDI_TX_Buffer  	[MIDI_DATA_IN_PACKET_SIZE] 	__ALIGN_END  = {0};
+__ALIGN_BEGIN uint8_t USB_Rx_Buffer		[MIDI_DATA_OUT_PACKET_SIZE]	__ALIGN_END ;
 
 USBD_HandleTypeDef *pInstance = NULL;
 
@@ -32,7 +32,7 @@ USBD_ClassTypeDef  hUsbClassMIDI =
   NULL,
   USBD_MIDI_DataIn,
   USBD_MIDI_DataOut,
-  NULL,
+  USBD_MIDI_SOF_Callback,
   NULL,
   NULL,
   USBD_MIDI_GetCfgDesc,
@@ -43,7 +43,6 @@ USBD_ClassTypeDef  hUsbClassMIDI =
 
 /* USB MIDI device Configuration Descriptor */
 __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIGN_END =
-//		const uint8 CYCODE USBMIDI_1_DEVICE0_CONFIGURATION0_DESCR[165u] =
 {
 	/*  Config Descriptor Length               */ 0x09u,
 	/*  DescriptorType: CONFIG                 */ 0x02u,
@@ -69,7 +68,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* AC Header Descriptor
 	*********************************************************************/
 	/*  AC Header Descriptor Length            */ 0x09u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x01u,
 	/*  bcdADC                                 */ 0x00u, 0x01u,
 	/*  wTotalLength                           */ 0x09u, 0x00u,
@@ -91,7 +90,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MS Header Descriptor
 	*********************************************************************/
 	/*  MS Header Descriptor Length            */ 0x07u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x01u,
 	/*  bcdADC                                 */ 0x00u, 0x01u,
 	/*  wTotalLength                           */ 0x61u, 0x00u,
@@ -99,7 +98,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MIDI IN Jack Descriptor
 	*********************************************************************/
 	/*  MIDI IN Jack Descriptor Length         */ 0x06u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x02u,
 	/*  bJackType                              */ 0x01u,
 	/*  bJackID                                */ 0x01u,
@@ -108,7 +107,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MIDI IN Jack Descriptor
 	*********************************************************************/
 	/*  MIDI IN Jack Descriptor Length         */ 0x06u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x02u,
 	/*  bJackType                              */ 0x02u,
 	/*  bJackID                                */ 0x02u,
@@ -129,7 +128,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MIDI OUT Jack Descriptor
 	*********************************************************************/
 	/*  MIDI OUT Jack Descriptor Length        */ 0x09u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x03u,
 	/*  bJackType                              */ 0x02u,
 	/*  bJackID                                */ 0x04u,
@@ -141,7 +140,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MIDI IN Jack Descriptor
 	*********************************************************************/
 	/*  MIDI IN Jack Descriptor Length         */ 0x06u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x02u,
 	/*  bJackType                              */ 0x01u,
 	/*  bJackID                                */ 0x05u,
@@ -150,7 +149,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MIDI IN Jack Descriptor
 	*********************************************************************/
 	/*  MIDI IN Jack Descriptor Length         */ 0x06u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x02u,
 	/*  bJackType                              */ 0x02u,
 	/*  bJackID                                */ 0x06u,
@@ -159,7 +158,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MIDI OUT Jack Descriptor
 	*********************************************************************/
 	/*  MIDI OUT Jack Descriptor Length        */ 0x09u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x03u,
 	/*  bJackType                              */ 0x01u,
 	/*  bJackID                                */ 0x07u,
@@ -183,7 +182,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MIDI IN Jack Descriptor
 	*********************************************************************/
 	/*  MIDI IN Jack Descriptor Length         */ 0x06u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x02u,
 	/*  bJackType                              */ 0x01u,
 	/*  bJackID                                */ 0x09u,
@@ -192,7 +191,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MIDI IN Jack Descriptor
 	*********************************************************************/
 	/*  MIDI IN Jack Descriptor Length         */ 0x06u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x02u,
 	/*  bJackType                              */ 0x02u,
 	/*  bJackID                                */ 0x0Au,
@@ -201,7 +200,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MIDI OUT Jack Descriptor
 	*********************************************************************/
 	/*  MIDI OUT Jack Descriptor Length        */ 0x09u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x03u,
 	/*  bJackType                              */ 0x01u,
 	/*  bJackID                                */ 0x0Bu,
@@ -213,7 +212,7 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_CfgDesc[USB_MIDI_CONFIG_DESC_SIZE] __ALIG
 	* MIDI OUT Jack Descriptor
 	*********************************************************************/
 	/*  MIDI OUT Jack Descriptor Length        */ 0x09u,
-	/*  DescriptorType: MIDI                  */ 0x24u,
+	/*  DescriptorType: MIDI                   */ 0x24u,
 	/*  bDescriptorSubtype                     */ 0x03u,
 	/*  bJackType                              */ 0x02u,
 	/*  bJackID                                */ 0x0Cu,
@@ -276,13 +275,81 @@ __ALIGN_BEGIN static uint8_t USBD_MIDI_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER
 	0x00,
 };
 
+static uint8_t  USBD_MIDI_SOF_Callback (USBD_HandleTypeDef *pdev)
+{
+	if (MIDI_DataIn_NonEmpty())
+	{
+		USBD_MIDI_Transmit();
+	}
+	return USBD_OK;
+}
+
+static uint8_t  USBD_MIDI_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
+{
+	USB_Tx_State = USB_Tx_State ? 0: 1;
+
+	if (MIDI_DataIn_NonEmpty())
+	{
+		USBD_MIDI_Transmit();
+	}
+	return USBD_OK;
+}
+
+
+/*
+__ALIGN_BEGIN uint8_t MIDI_TX_Test[16] __ALIGN_END =
+{	0x09, 0x90, 0x11, 0x10,
+	0x09, 0x90, 0x22, 0x20,
+	0x09, 0x90, 0x33, 0x33,
+	0x09, 0x90, 0x44, 0x40};
+
+extern uint8_t sendNotes;
+*/
+uint16_t USBD_MIDI_Transmit (void)
+{
+/*	if (sendNotes)
+	{
+		USBD_LL_Transmit (pInstance, USB_EP_IN_ADDR_1, MIDI_TX_Test, 16); return 0;
+		sendNotes = 0;
+	}
+	return 0;*/
+	uint16_t delta = 0;
+	if (USB_Tx_State == 0)
+	{
+		delta = MIDI_DataIn_Dump (MIDI_TX_Buffer);
+		if (delta)
+		{
+			USB_Tx_State = 1;
+			USBD_LL_Transmit (pInstance, USB_EP_IN_ADDR_1, MIDI_TX_Buffer, delta);
+		}
+	}
+	return delta;
+}
+
+// -----------------------------------------------------------------------------
+
+static uint8_t  USBD_MIDI_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
+{
+	uint16_t USB_Rx_Cnt;
+/*
+	USBD_MIDI_ItfTypeDef *pmidi;
+	pmidi = (USBD_MIDI_ItfTypeDef *)(pdev->pUserData);
+	USB_Rx_Cnt = ((PCD_HandleTypeDef*)pdev->pData)->OUT_ep[epnum].xfer_count;
+	pmidi->RX((uint8_t *)&USB_Rx_Buffer, USB_Rx_Cnt);
+*/
+	USB_Rx_Cnt = ((PCD_HandleTypeDef*)pdev->pData)->OUT_ep[epnum].xfer_count;
+	MIDI_DataRx ((uint8_t *)&USB_Rx_Buffer, USB_Rx_Cnt);
+
+	USBD_LL_PrepareReceive(pdev,USB_EP_OUT_ADDR_1,(uint8_t*)(USB_Rx_Buffer), MIDI_DATA_OUT_PACKET_SIZE);
+	return USBD_OK;
+}
 
 static uint8_t  USBD_MIDI_Init (USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 {
 	pInstance = pdev;
 	USBD_LL_OpenEP(&hUsbDeviceFS, USB_EP_OUT_ADDR_1, USBD_EP_TYPE_BULK, MIDI_OUT_PACKET_SIZE);
 	USBD_LL_OpenEP(&hUsbDeviceFS, USB_EP_IN_ADDR_1,  USBD_EP_TYPE_BULK, MIDI_OUT_PACKET_SIZE);
-	USBD_LL_PrepareReceive(pdev, USB_EP_OUT_ADDR_1, (uint8_t*)(USB_Rx_Buffer), MIDI_OUT_PACKET_SIZE);
+	USBD_LL_PrepareReceive(pdev,  USB_EP_OUT_ADDR_1, (uint8_t*)(USB_Rx_Buffer), MIDI_OUT_PACKET_SIZE);
 	return USBD_OK;
 }
 
@@ -294,76 +361,6 @@ static uint8_t  USBD_MIDI_DeInit (USBD_HandleTypeDef *pdev, uint8_t cfgidx)
 	return USBD_OK;
 }
 
-static uint8_t  USBD_MIDI_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
-{
-	USB_Tx_State = USB_Tx_State ? 0: 1;
-	return USBD_OK;
-}
-
-static uint8_t  USBD_MIDI_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
-{
-	uint16_t USB_Rx_Cnt;
-
-	USBD_MIDI_ItfTypeDef *pmidi;
-	pmidi = (USBD_MIDI_ItfTypeDef *)(pdev->pUserData);
-
-	USB_Rx_Cnt = ((PCD_HandleTypeDef*)pdev->pData)->OUT_ep[epnum].xfer_count;
-
-	pmidi->RX((uint8_t *)&USB_Rx_Buffer, USB_Rx_Cnt);
-
-	USBD_LL_PrepareReceive(pdev,USB_EP_OUT_ADDR_1,(uint8_t*)(USB_Rx_Buffer), MIDI_OUT_PACKET_SIZE);
-	return USBD_OK;
-}
-
-static uint8_t MIDI_TX_Buffer  [MIDI_USB_RING_SIZE*MIDI_USB_MSG_SIZE]  = {0};
-void USBD_MIDI_DumpRingBuffer ()
-{
-	uint16_t delta = MIDI_Message_Ring_Dump(MIDI_TX_Buffer);
-	if (delta)
-	{
-	    USB_Tx_State = 1;
-	    USBD_LL_Transmit (pInstance, USB_EP_IN_ADDR_1,
-	    		MIDI_TX_Buffer, delta);
-	}
-}
-/*
-void USBD_MIDI_SendPacket (){
-  uint16_t USB_Tx_ptr;
-  uint16_t USB_Tx_length;
-
-  if(USB_Tx_State != 1){
-    if (APP_Rx_ptr_out == APP_RX_DATA_SIZE){
-      APP_Rx_ptr_out = 0;
-    }
-
-    if(APP_Rx_ptr_out == APP_Rx_ptr_in){
-      USB_Tx_State = 0;
-      return;
-    }
-
-    if(APP_Rx_ptr_out > APP_Rx_ptr_in){
-      APP_Rx_length = APP_RX_DATA_SIZE - APP_Rx_ptr_out;
-    }else{
-      APP_Rx_length = APP_Rx_ptr_in - APP_Rx_ptr_out;
-    }
-
-    if (APP_Rx_length > MIDI_DATA_IN_PACKET_SIZE){
-      USB_Tx_ptr = APP_Rx_ptr_out;
-      USB_Tx_length = MIDI_DATA_IN_PACKET_SIZE;
-      APP_Rx_ptr_out += MIDI_DATA_IN_PACKET_SIZE;
-      APP_Rx_length -= MIDI_DATA_IN_PACKET_SIZE;
-    }else{
-      USB_Tx_ptr = APP_Rx_ptr_out;
-      USB_Tx_length = APP_Rx_length;
-      APP_Rx_ptr_out += APP_Rx_length;
-      APP_Rx_length = 0;
-    }
-    USB_Tx_State = 1;
-    USBD_LL_Transmit (pInstance, USB_EP_IN_ADDR_1,(uint8_t*)&APP_Rx_Buffer[USB_Tx_ptr],USB_Tx_length);
-  }
-}
-*/
-// -----------------------------------------------------------------------------
 static uint8_t  *USBD_MIDI_GetCfgDesc (uint16_t *length)
 {
 	*length = sizeof (USBD_MIDI_CfgDesc);
@@ -382,7 +379,8 @@ inline uint8_t  USBD_MIDI_RegisterInterface  (USBD_HandleTypeDef   *pdev,
 	if(fops != NULL)
 	{
 		pdev->pUserData= fops;
+	    return USBD_OK;
 	}
-	return 0;
+	return USBD_FAIL;
 }
 

@@ -20,7 +20,7 @@ typedef struct{
   uint32_t top;
   uint32_t last;
   uint32_t num;
-  uint32_t queue_size;	// not use yet.
+//  uint32_t queue_size;	// not use yet.
   uint32_t queue[B4QUEUE_SIZE];
 }stB4Arrq;
 
