@@ -148,7 +148,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART1_IRQn);
   /* USER CODE BEGIN USART1_MspInit 1 */
-
+//    __HAL_UART_ENABLE_IT(huart, UART_IT_RXNE);
+//    __HAL_UART_ENABLE_IT(huart, UART_IT_TC);
   /* USER CODE END USART1_MspInit 1 */
   }
   else if(huart->Instance==USART2)
@@ -178,7 +179,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART2_IRQn);
   /* USER CODE BEGIN USART2_MspInit 1 */
-
+//    __HAL_UART_ENABLE_IT(huart, UART_IT_RXNE);
+//    __HAL_UART_ENABLE_IT(huart, UART_IT_TC);
   /* USER CODE END USART2_MspInit 1 */
   }
   else if(huart->Instance==USART3)
@@ -208,7 +210,8 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     HAL_NVIC_SetPriority(USART3_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(USART3_IRQn);
   /* USER CODE BEGIN USART3_MspInit 1 */
-
+//    __HAL_UART_ENABLE_IT(huart, UART_IT_RXNE);
+//    __HAL_UART_ENABLE_IT(huart, UART_IT_TC);
   /* USER CODE END USART3_MspInit 1 */
   }
 

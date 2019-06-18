@@ -4,6 +4,7 @@
 #include "usbd_desc.h"
 #include "usbd_midi.h"
 
+#include "stm32f1xx_hal_pcd_ex.h"
 
 USBD_HandleTypeDef 		hUsbDeviceFS;
 USBD_ClassTypeDef  		hUsbClassMIDI;

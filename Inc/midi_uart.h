@@ -5,26 +5,27 @@
 extern "C" {
 #endif
 
+#include "midi_ringbuffer.h"
 
 // -----------------------------------------------------------------------------
 // MIDI 32-bit message, byte 1: cable_id + code_index
 // -----------------------------------------------------------------------------
 #define MIDI_CABLE_0			(0x00)
-#define MIDI_CABLE_1			(0x01)
-#define MIDI_CABLE_2			(0x02)
-#define MIDI_CABLE_3			(0x03)
-#define MIDI_CABLE_4			(0x04)
-#define MIDI_CABLE_5			(0x05)
-#define MIDI_CABLE_6			(0x06)
-#define MIDI_CABLE_7			(0x07)
-#define MIDI_CABLE_8			(0x08)
-#define MIDI_CABLE_9			(0x09)
-#define MIDI_CABLE_A			(0x0A)
-#define MIDI_CABLE_B			(0x0B)
-#define MIDI_CABLE_C			(0x0C)
-#define MIDI_CABLE_D			(0x0D)
-#define MIDI_CABLE_E			(0x0E)
-#define MIDI_CABLE_F			(0x0F)
+#define MIDI_CABLE_1			(0x10)
+#define MIDI_CABLE_2			(0x20)
+#define MIDI_CABLE_3			(0x30)
+#define MIDI_CABLE_4			(0x40)
+#define MIDI_CABLE_5			(0x50)
+#define MIDI_CABLE_6			(0x60)
+#define MIDI_CABLE_7			(0x70)
+#define MIDI_CABLE_8			(0x80)
+#define MIDI_CABLE_9			(0x90)
+#define MIDI_CABLE_A			(0xA0)
+#define MIDI_CABLE_B			(0xB0)
+#define MIDI_CABLE_C			(0xC0)
+#define MIDI_CABLE_D			(0xD0)
+#define MIDI_CABLE_E			(0xE0)
+#define MIDI_CABLE_F			(0xF0)
 
 #define MIDI_CIN_RESERVE_0		(0x00)
 #define MIDI_CIN_RESERVE_1		(0x01)
@@ -45,8 +46,9 @@ extern "C" {
 
 #define MIDI_USB_PREAMBLE_SHIFT4	(4)
 #define MIDI_USB_MASK_LOW4			(0x0F)
+#define MIDI_USB_MASK_HIGH4			(0xF0)
 
-#define MIDI_USB_PREAMBLE(cable,index) 			((uint8_t)( ((cable & MIDI_USB_MASK_LOW4)<<MIDI_USB_PREAMBLE_SHIFT4) | (index & MIDI_USB_MASK_LOW4)))
+#define MIDI_USB_PREAMBLE(cable,index) 		((uint8_t)( (cable & MIDI_USB_MASK_HIGH4) | (index & MIDI_USB_MASK_LOW4)))
 
 
 // -----------------------------------------------------------------------------
@@ -61,7 +63,7 @@ extern "C" {
 #define MIDI_EVENT_PITCH_BEND	(0xE0)
 #define MIDI_EVENT_SYSEX		(0xF0)
 
-#define MIDI_SYSEX_MASK			(0x0F)
+#define MIDI_MASK_SYSEX			(0x0F)
 #define MIDI_SYSEX_MSG_START	(0x00)
 #define MIDI_SYSEX_TC			(0x01)
 #define MIDI_SYSEX_SONG_POS 	(0x02)
@@ -86,10 +88,14 @@ extern "C" {
 #define MIDI_MASK_TRIM			(0x7F)
 #define MIDI_TRIM(byte)			((uint8_t)(byte &  MIDI_MASK_TRIM))
 
+#define MIDI_MASK_COMMAND		(0x80)
+#define MIDI_BYTE_IS_COMMAND(b) ((uint8_t)(b & (uint8_t)MIDI_MASK_COMMAND) != 0)
 
 // -----------------------------------------------------------------------------
 // UART handling
 // -----------------------------------------------------------------------------
+
+#define MIDI_UART_ONE_BYTE	(1)
 
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart2;
@@ -98,36 +104,33 @@ extern UART_HandleTypeDef huart3;
 void MX_USART1_UART_Init(void);
 void MX_USART2_UART_Init(void);
 void MX_USART3_UART_Init(void);
-void HAL_UART_MspInit(UART_HandleTypeDef* huart);
-
-// -----------------------------------------------------------------------------
-// MIDI USB Message Ring Buffer
-// -----------------------------------------------------------------------------
-#define MIDI_USB_MSG_SIZE		(4)
-#define MIDI_USB_RING_SIZE		(16)
-
-uint8_t		MIDI_DataIn_NonEmpty 	(void);
-uint16_t	MIDI_DataIn_Push 	(uint8_t *message);
-uint16_t 	MIDI_DataIn_Dump 	(uint8_t *whereTo);
-
 
 #define MIDI_UART_PORT_COUNT	(3)
-#define MIDI_UART_RING_SIZE		(16)
+#define MIDI_UART_RING_SIZE		(64)
+
+void MIDI_Init	(void);
+void MIDI_Handle_USB_DataOut (uint8_t *msg, uint16_t length);
+
+void sendNoteOn		(uint8_t ch, uint8_t note, uint8_t vel);
+void sendNoteOff	(uint8_t ch, uint8_t note);
+void sendCtlChange	(uint8_t ch, uint8_t num, uint8_t value);
+
+uint8_t 						MIDI_Guess_USB_Msg_Length 	(uint8_t code_index);
+uint8_t 						MIDI_UART_Guess_CableId 	(UART_HandleTypeDef *huart);
+MIDI_UART_Queue_TypeDef* 		MIDI_UART_Guess_TxQueue 	(UART_HandleTypeDef *huart);
+MIDI_UART_Queue_TypeDef* 		MIDI_UART_Guess_TxQueue 	(UART_HandleTypeDef *huart);
+MIDI_UART_RxHandler_TypeDef* 	MIDI_UART_Guess_RxHandler 	(UART_HandleTypeDef *huart);
+HAL_StatusTypeDef 				MIDI_UART_Receive_IT 		(UART_HandleTypeDef *huart);
 
 
-enum {
-	MIDI_UART_A = 0,
-	MIDI_UART_B = 1,
-	MIDI_UART_C = 2
-} MidiPort_t;
+void 	MIDI_UART_Dispatch_Msg 		(uint8_t *message);
+void 	MIDI_UART_Dispatch 			(void);
+void 	MIDI_UART_TxQueue_Transmit 	(void);
 
-uint8_t	MIDI_TX_Push 	(uint8_t port, uint8_t *byte);
-uint8_t	MIDI_TX_Pop 	(uint8_t port, uint8_t *byte);
-void 	MIDI_UART_Init		(void);
+uint8_t* MIDI_UART_RxHandler_USBMessage (MIDI_UART_RxHandler_TypeDef *handler);
 
-extern void sendNoteOn(uint8_t ch, uint8_t note, uint8_t vel);
-extern void sendNoteOff(uint8_t ch, uint8_t note);
-extern void sendCtlChange(uint8_t ch, uint8_t num, uint8_t value);
+uint8_t MIDI_Guess_UART_Msg_Length 	(uint8_t command);
+uint8_t MIDI_USB_Preamle_Byte 		(uint8_t command, uint8_t length);
 
 
 #ifdef __cplusplus

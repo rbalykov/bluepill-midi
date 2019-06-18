@@ -37,8 +37,6 @@ extern USBD_MIDI_ItfTypeDef 	hUsbClassMIDI_CB;
 extern USBD_HandleTypeDef 		hUsbDeviceFS;
 extern USBD_ClassTypeDef  		hUsbClassMIDI;
 
-extern uint8_t  USB_Tx_State;
-
 extern stB4Arrq qDataOut;
 extern stB4Arrq qDataIn;
 

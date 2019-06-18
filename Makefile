@@ -44,6 +44,7 @@ Src/usbd_desc.c \
 Src/usbd_midi.c \
 Src/usbd_midi_if.c \
 Src/midi_uart.c \
+Src/midi_ringbuffer.c \
 Src/stm32f1xx_it.c \
 Src/stm32f1xx_hal_msp.c \
 Src/queue32.c \
@@ -197,7 +198,7 @@ clean:
 	-rm -fR $(BUILD_DIR)
 
 flash-write: 
-	sudo $(FLASHTOOL) -w $(BUILD_DIR)/$(TARGET).hex $(SERIALPORT)
+	sudo $(FLASHTOOL) -b115200 -v -w $(BUILD_DIR)/$(TARGET).hex $(SERIALPORT)
 
 flash: all flash-write
 	

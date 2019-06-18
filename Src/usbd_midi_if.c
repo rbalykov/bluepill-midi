@@ -1,3 +1,5 @@
+
+/*
 #include "usbd_midi.h"
 #include "usdb_midi_if.h"
 #include "stm32f1xx_hal.h"
@@ -27,7 +29,7 @@ uint16_t MIDI_DataRx(uint8_t *msg, uint16_t length)
 	return 0;
 }
 
-
+*/
 
 
 

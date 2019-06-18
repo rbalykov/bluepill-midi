@@ -1,17 +1,22 @@
 #include "main.h"
 #include "usb_device.h"
-#include "stm32f1xx_hal_uart.h"
-#include "stm32f1xx_hal_gpio.h"
+#include "stm32f1xx_hal.h"
+//#include "stm32f1xx_hal_uart.h"
+//#include "stm32f1xx_hal_gpio.h"
 
 #include <string.h>
 #include "usdb_midi_if.h"
+#include "usbd_core.h"
+#include "midi_uart.h"
+#include "midi_ringbuffer.h"
 
-
-UART_HandleTypeDef huart2;
 
 static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-uint8_t sendNotes = 0;
+
+extern uint16_t MIDI_DataTx(uint8_t *msg, uint16_t length);
+
+uint8_t message[] = {0x09, 0x90, 0x40, 0x40};
 
 int main(void)
 {
@@ -19,49 +24,41 @@ int main(void)
 	SystemClock_Config();
 	MX_GPIO_Init();
 
-	MX_USB_DEVICE_Init();
-	MIDI_UART_Init();
+	MIDI_Init();
 
-	volatile uint32_t delay;
-	static uint8_t count=0;
+	MX_USB_DEVICE_Init();
+
+	MIDI_UART_Receive_IT(&huart3);
 	while (1)
 	{
-		count++;
-		delay = 0xFFFFFF; while (--delay){}
-		sendNoteOn (0, 0x00+(count&0xF), (0x60+(count&0xF)));
-		sendNoteOn (0, 0x10+(count&0xF), (0x60+(count&0xF)));
-		sendNoteOn (0, 0x20+(count&0xF), (0x60+(count&0xF)));
-		sendNoteOn (0, 0x30+(count&0xF), (0x60+(count&0xF)));
-		sendNoteOn (0, 0x40+(count&0xF), (0x60+(count&0xF)));
-		sendNoteOn (0, 0x50+(count&0xF), (0x60+(count&0xF)));
-
-		delay = 0xFFFFFF; while (--delay){}
-		sendNoteOff(0, 0x48);
+		MIDI_UART_Dispatch();
+		MIDI_UART_TxQueue_Transmit();
+	//	 HAL_UART_Transmit_IT(&huart3, message, 13);
 	}
 }
 
+
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
-	static uint8_t count=0;
 	HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
+	static uint8_t count =0;
 	if (GPIO_Pin == BUTTON_Pin)
 	{
-//		sendNotes = (BUTTON_PRESSED);
-		count += BUTTON_PRESSED ? 1 : 0;
-		(BUTTON_PRESSED) ? led_on(): led_off();
-		(BUTTON_PRESSED) ? sendNoteOn (0, 0x40+(count&0xF), (0x60+(count&0x7F)))
-						 : sendNoteOff(0, 0x40+(count&0xF));
+		if (BUTTON_PRESSED)
+		{
+			count ++;
+//			MIDI_USB_Queue_Push (&MIDI_USB_Queue_DataIn, message);
+		}
 	}
 	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
 }
 
 // -----------------------------------------------------------------------------
 void led_on(void){
-//  ledTime = LEDTIMEMAX;
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 }
 void led_off(void){
-//  ledTime = 0;
   HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
 }
 void led_toggle(void){
