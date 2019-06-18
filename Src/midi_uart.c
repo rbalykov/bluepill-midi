@@ -230,8 +230,8 @@ void 	MIDI_Init		(void)
 	MIDI_USB_Queue_Init (&MIDI_USB_Queue_DataIn);
 	MIDI_USB_Queue_Init (&MIDI_USB_Queue_DataOut);
 
-//	MX_USART1_UART_Init();
-//	MX_USART2_UART_Init();
+	MX_USART1_UART_Init();
+	MX_USART2_UART_Init();
 	MX_USART3_UART_Init();
 }
 

@@ -28,7 +28,10 @@ int main(void)
 
 	MX_USB_DEVICE_Init();
 
+	MIDI_UART_Receive_IT(&huart1);
+	MIDI_UART_Receive_IT(&huart2);
 	MIDI_UART_Receive_IT(&huart3);
+
 	while (1)
 	{
 		MIDI_UART_Dispatch();
