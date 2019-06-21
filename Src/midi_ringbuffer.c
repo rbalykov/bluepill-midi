@@ -25,30 +25,28 @@ void 	MIDI_UART_Queue_Init (MIDI_UART_Queue_TypeDef *queue)
 
 uint8_t MIDI_UART_Queue_Push (MIDI_UART_Queue_TypeDef *queue, uint8_t *byte)
 {
-//	if ((queue->ptrPush + 1)%MIDI_USB_RINGBUFFER_SIZE == queue->ptrPop)
 	if (queue->length >= MIDI_UART_RINGBUFFER_SIZE)
 		return 0;
 
-//	while (	queue->semaphore) {}
-//	queue->semaphore = 1;
+	while (	queue->semaphore) {}
+	queue->semaphore = 1;
 	queue->data[queue->ptrPush] = byte[0];
 	queue->ptrPush = (queue->ptrPush + 1)%MIDI_UART_RINGBUFFER_SIZE;
 	queue->length ++;
-//	queue->semaphore = 0;
+	queue->semaphore = 0;
 	return 1;
-
 }
 
 uint8_t MIDI_UART_Queue_Pop  (MIDI_UART_Queue_TypeDef *queue, uint8_t *byte)
 {
 	if (queue->length == 0)	return 0;
 
-//	while (	queue->semaphore) {}
-//	queue->semaphore = 1;
+	while (	queue->semaphore) {}
+	queue->semaphore = 1;
 	byte[0] = queue->data[queue->ptrPop];
 	queue->ptrPop = (queue->ptrPop + 1)%MIDI_UART_RINGBUFFER_SIZE;
 	queue->length--;
-//	queue->semaphore = 0;
+	queue->semaphore = 0;
 	return 1;
 }
 
@@ -104,7 +102,6 @@ uint8_t  MIDI_USB_Queue_Push 		(MIDI_USB_Queue_TypeDef *queue, uint8_t *message)
 {
 
 	uint8_t push = queue->ptrPush;
-//	if ((queue->ptrPush + 1)%MIDI_USB_RINGBUFFER_SIZE == queue->ptrPop)
 	if (queue->length >= MIDI_USB_RINGBUFFER_SIZE)
 		return 0;
 

@@ -5,7 +5,6 @@
 //#include "stm32f1xx_hal_gpio.h"
 
 #include <string.h>
-#include "usdb_midi_if.h"
 #include "usbd_core.h"
 #include "midi_uart.h"
 #include "midi_ringbuffer.h"
@@ -16,7 +15,6 @@ static void MX_GPIO_Init(void);
 
 extern uint16_t MIDI_DataTx(uint8_t *msg, uint16_t length);
 
-uint8_t message[] = {0x09, 0x90, 0x40, 0x40};
 
 int main(void)
 {
@@ -51,7 +49,11 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 		if (BUTTON_PRESSED)
 		{
 			count ++;
-//			MIDI_USB_Queue_Push (&MIDI_USB_Queue_DataIn, message);
+			sendNoteOn(0, 60, 60);
+		}
+		else
+		{
+			sendNoteOff(0, 60);
 		}
 	}
 	HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);

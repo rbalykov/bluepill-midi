@@ -165,27 +165,6 @@ uint8_t MIDI_Guess_UART_Msg_Length (uint8_t command)
 	}
 	return 0;
 }
-/*
-uint8_t MIDI_USB_Preamle_Byte 		(uint8_t command, uint8_t length)
-{
-	uint8_t result = 0;
-	uint8_t event = command & MIDI_MASK_EVENT;
-
-	switch (event)
-	{
-		case MIDI_EVENT_NOTE_OFF:
-			result = MIDI_CIN_NOTE_OFF; break;
-		case MIDI_EVENT_NOTE_ON:
-			result = MIDI_CIN_NOTE_ON;  break;
-		case MIDI_EVENT_TOUCH_SINGLE:
-		case MIDI_EVENT_CONTROL:
-		case MIDI_EVENT_PITCH_BEND:
-
-		case MIDI_EVENT_PROGRAM:
-		case MIDI_EVENT_TOUCH_GROUP:
-	}
-}
-*/
 
 uint8_t MIDI_Guess_USB_Msg_Length (uint8_t code_index)
 {
@@ -274,7 +253,7 @@ void sendCtlChange(uint8_t ch, uint8_t ctl, uint8_t value)
 void MX_USART1_UART_Init(void)
 {
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 38400;//31250;
+  huart1.Init.BaudRate = 31250;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;
@@ -290,7 +269,7 @@ void MX_USART1_UART_Init(void)
 void MX_USART2_UART_Init(void)
 {
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 38400;//31250;
+  huart2.Init.BaudRate = 31250;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -306,7 +285,7 @@ void MX_USART2_UART_Init(void)
 void MX_USART3_UART_Init(void)
 {
   huart3.Instance = USART3;
-  huart3.Init.BaudRate = 38400;//31250;
+  huart3.Init.BaudRate = 31250;
   huart3.Init.WordLength = UART_WORDLENGTH_8B;
   huart3.Init.StopBits = UART_STOPBITS_1;
   huart3.Init.Parity = UART_PARITY_NONE;

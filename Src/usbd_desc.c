@@ -4,14 +4,14 @@
 #include "usbd_desc.h"
 #include "usbd_conf.h"
 
-#define USBD_VID     				1155
-#define USBD_LANGID_STRING     		1033
-#define USBD_MANUFACTURER_STRING    "Neutrino"
-#define USBD_PID_FS     			22336
-#define USBD_PRODUCT_STRING_FS     	"USB-Midi interface"
+#define USBD_VID     					0x0483
+#define USBD_LANGID_STRING     			1033
+#define USBD_MANUFACTURER_STRING    	"Neutrino"
+#define USBD_PID_FS     				0x5740
+#define USBD_PRODUCT_STRING_FS     		"USB-Midi interface"
 #define USBD_SERIALNUMBER_STRING_FS     "01010010001A"
-#define USBD_CONFIGURATION_STRING_FS     "USB-MIDI 3x3 adapter"
-#define USBD_INTERFACE_STRING_FS	"MIDI Interface"
+#define USBD_CONFIGURATION_STRING_FS    "USB-MIDI 3x3 adapter"
+#define USBD_INTERFACE_STRING_FS		"MIDI Interface"
 
 
 uint8_t * USBD_FS_DeviceDescriptor(USBD_SpeedTypeDef speed, uint16_t *length);
@@ -49,8 +49,8 @@ __ALIGN_BEGIN uint8_t USBD_FS_DeviceDesc[USB_LEN_DEV_DESC] __ALIGN_END =
 		/* bDeviceSubClass                         */ 0x00u,
 		/* bDeviceProtocol                         */ 0x00u,
 		/* bMaxPacketSize0                         */ USB_MAX_EP0_SIZE,
-		/* idVendor                                */ 0xB4u, 0x04u,
-		/* idProduct                               */ 0x32u, 0xD2u,
+		/* idVendor                                */ 0x83u, 0x04u,
+		/* idProduct                               */ 0x40u, 0x57u,
 		/* bcdDevice                               */ 0x01u, 0x00u,
 		/* iManufacturer                           */ USBD_IDX_MFC_STR,
 		/* iProduct                                */ USBD_IDX_PRODUCT_STR,

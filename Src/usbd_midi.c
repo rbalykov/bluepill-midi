@@ -1,6 +1,5 @@
 
 #include "usbd_midi.h"
-#include "usdb_midi_if.h"
 #include "usbd_desc.h"
 #include "usbd_ctlreq.h"
 
