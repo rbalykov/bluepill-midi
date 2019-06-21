@@ -47,7 +47,6 @@ Src/midi_uart.c \
 Src/midi_ringbuffer.c \
 Src/stm32f1xx_it.c \
 Src/stm32f1xx_hal_msp.c \
-Src/queue32.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pcd.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pcd_ex.c \
