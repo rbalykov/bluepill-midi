@@ -39,7 +39,9 @@ USBD_ClassTypeDef  hUsbClassMIDI =
   USBD_MIDI_GetCfgDesc, 
   USBD_MIDI_GetCfgDesc,
   USBD_MIDI_GetDeviceQualifierDesc,
+  USBD_GetUserDectriptor
 };
+
 
 static uint8_t  usbd_midi_DataOut     (USBD_HandleTypeDef *pdev, uint8_t epnum)
 {

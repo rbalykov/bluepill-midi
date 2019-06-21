@@ -14,8 +14,6 @@
 static void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 
-extern uint16_t MIDI_DataTx(uint8_t *msg, uint16_t length);
-
 
 int main(void)
 {
@@ -25,8 +23,6 @@ int main(void)
 
 	MIDI_UART_Parser_Init();
 	MIDI_Init();
-
-	led_off();
 
 	MX_USB_DEVICE_Init();
 

@@ -72,7 +72,6 @@ static void MsgComplete (MIDI_UART_Parser_TypeDef *handler)
 
 		MIDI_USB_Queue_Push(&MIDI_USB_Queue_DataIn,  message);
 	}
-	led_toggle();
 	// don't reset command, only data
 	// this allows MIDI_RUNNING mode
 	handler->length = 0;

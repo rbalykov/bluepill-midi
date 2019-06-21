@@ -12,8 +12,6 @@
 
 #include "midi_uart.h"
 
-//extern USBD_HandleTypeDef *pInstance;
-
 // UART Hardware
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
@@ -209,8 +207,6 @@ void sendCtlChange(uint8_t ch, uint8_t ctl, uint8_t value)
 	message[3] = MIDI_TRIM			(value);
 	MIDI_USB_Queue_Push(&MIDI_USB_Queue_DataIn,  message);
 }
-
-
 
 void MX_USART1_UART_Init(void)
 {
