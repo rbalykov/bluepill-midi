@@ -4,8 +4,6 @@
 #include <stdint.h>
 #include <string.h>
 
-//#include "stm32f1xx_hal_def.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -29,24 +27,6 @@ uint8_t MIDI_UART_Queue_Push (MIDI_UART_Queue_TypeDef *queue, uint8_t *byte);
 uint8_t MIDI_UART_Queue_Pop  (MIDI_UART_Queue_TypeDef *queue, uint8_t *byte);
 uint8_t MIDI_UART_Queue_Next (MIDI_UART_Queue_TypeDef *queue, uint8_t *byte);
 uint8_t MIDI_UART_Queue_Empty(MIDI_UART_Queue_TypeDef *queue);
-
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-// -----------------------------------------------------------------------------
-#define MIDI_UART_RXBUFFER_SIZE	(1)
-#define MIDI_MSG_MAX_SIZE		(3)
-
-typedef struct _MIDI_UART_RxHandler_TypeDef
-{
-	uint8_t  data[MIDI_MSG_MAX_SIZE];
-	uint8_t  rxbuffer[MIDI_UART_RXBUFFER_SIZE];
-	uint16_t length;
-	uint8_t  cable_id;
-}MIDI_UART_RxHandler_TypeDef;
-
-void 	MIDI_UART_RxHandler_Init (MIDI_UART_RxHandler_TypeDef *handler);
-void 	MIDI_UART_RxHandler_Push (MIDI_UART_RxHandler_TypeDef *handler, uint8_t byte);
-void 	MIDI_UART_RxHandler_MsgStart (MIDI_UART_RxHandler_TypeDef *handler);
 
 // -----------------------------------------------------------------------------
 // -----------------------------------------------------------------------------
@@ -77,10 +57,6 @@ uint8_t  MIDI_USB_Queue_Empty 		(MIDI_USB_Queue_TypeDef *queue);
 extern MIDI_UART_Queue_TypeDef		MIDI_UART_Queue_Tx1;
 extern MIDI_UART_Queue_TypeDef		MIDI_UART_Queue_Tx2;
 extern MIDI_UART_Queue_TypeDef		MIDI_UART_Queue_Tx3;
-
-extern MIDI_UART_RxHandler_TypeDef 	MIDI_UART_Rx_1;
-extern MIDI_UART_RxHandler_TypeDef 	MIDI_UART_Rx_2;
-extern MIDI_UART_RxHandler_TypeDef 	MIDI_UART_Rx_3;
 
 extern MIDI_USB_Queue_TypeDef		MIDI_USB_Queue_DataIn;
 extern MIDI_USB_Queue_TypeDef		MIDI_USB_Queue_DataOut;

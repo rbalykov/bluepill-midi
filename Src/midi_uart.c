@@ -34,7 +34,7 @@ MIDI_UART_Queue_TypeDef* MIDI_UART_Guess_TxQueue (UART_HandleTypeDef *huart)
 	return NULL;
 }
 
-MIDI_UART_RxHandler_TypeDef* MIDI_UART_Guess_RxHandler (UART_HandleTypeDef *huart)
+MIDI_UART_Parser_TypeDef* MIDI_UART_Guess_Parser (UART_HandleTypeDef *huart)
 {
 	if (huart->Instance == USART1) return &MIDI_UART_Rx_1;
 	if (huart->Instance == USART2) return &MIDI_UART_Rx_2;
@@ -52,28 +52,28 @@ uint8_t MIDI_UART_Guess_CableId (UART_HandleTypeDef *huart)
 
 HAL_StatusTypeDef MIDI_UART_Receive_IT (UART_HandleTypeDef *huart)
 {
-	return HAL_UART_Receive_IT(huart,
-			MIDI_UART_Guess_RxHandler(huart)->rxbuffer, MIDI_UART_ONE_BYTE);
+	MIDI_UART_Parser_TypeDef * handler = MIDI_UART_Guess_Parser(huart);
+	if (handler)
+		return HAL_UART_Receive_IT(huart, handler->rxbuffer, MIDI_UART_ONE_BYTE);
+	return USBD_FAIL;
 }
 
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
 {
-	MIDI_UART_Guess_RxHandler(huart)->length = 0;
+	MIDI_UART_Parser_TypeDef * handler = MIDI_UART_Guess_Parser(huart);
+	if (handler)
+		handler->length = 0;
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	MIDI_UART_RxHandler_TypeDef *handler = MIDI_UART_Guess_RxHandler(huart);
-	handler->cable_id = MIDI_UART_Guess_CableId(huart);
-	uint8_t message[MIDI_USB_MSG_SIZE] = {0};
-
-	message[0] = MIDI_USB_PREAMBLE	(handler->cable_id , MIDI_CIN_SINGLEBYTE);
-	message[1] = handler->rxbuffer[0];
-
-	MIDI_USB_Queue_Push(&MIDI_USB_Queue_DataIn,  message);
-	HAL_UART_Receive_IT(huart, handler->rxbuffer, MIDI_UART_ONE_BYTE);
+	MIDI_UART_Parser_TypeDef * handler = MIDI_UART_Guess_Parser(huart);
+	if (handler)
+	{
+		MIDI_UART_Parser_Handle(handler, handler->rxbuffer[0]);
+		while (HAL_UART_Receive_IT(huart, handler->rxbuffer, MIDI_UART_ONE_BYTE) != HAL_OK);
+	}
 }
-
 
 void MIDI_UART_TxQueue_Transmit (void)
 {
@@ -95,7 +95,6 @@ void MIDI_UART_TxQueue_Transmit (void)
 			MIDI_UART_Queue_Pop (&MIDI_UART_Queue_Tx3, &dummy);
 	}
 }
-
 
 void 	MIDI_UART_Dispatch 			(void)
 {
@@ -127,43 +126,6 @@ void MIDI_UART_Dispatch_Msg (uint8_t *message)
 			MIDI_UART_Queue_Push (pQueue, &message[i]);
 		}
 	}
-}
-
-uint8_t MIDI_Guess_UART_Msg_Length (uint8_t command)
-{
-	uint8_t event = command & MIDI_MASK_EVENT;
-	switch (event)
-	{
-		case MIDI_EVENT_NOTE_OFF:
-		case MIDI_EVENT_NOTE_ON:
-		case MIDI_EVENT_TOUCH_SINGLE:
-		case MIDI_EVENT_CONTROL:
-		case MIDI_EVENT_PITCH_BEND:
-			return 3; break;
-		case MIDI_EVENT_PROGRAM:
-		case MIDI_EVENT_TOUCH_GROUP:
-			return 2; break;
-	}
-	uint8_t sysex = command & MIDI_MASK_SYSEX;
-	switch (sysex)
-	{
-		case MIDI_SYSEX_MSG_START:
-		case MIDI_SYSEX_SONG_POS:
-			return 3; break;
-		case MIDI_SYSEX_TC:
-		case MIDI_SYSEX_SONG_SELECT:
-			return 2; break;
-		case MIDI_SYSEX_TUNE:
-		case MIDI_SYSEX_MSG_STOP:
-		case MIDI_SYSEX_BEAT_CLOCK:
-		case MIDI_SYSEX_PLAY_START:
-		case MIDI_SYSEX_PLAY_CONT:
-		case MIDI_SYSEX_PLAY_STOP:
-		case MIDI_SYSEX_ALIVE:
-		case MIDI_SYSEX_RESET:
-			return 1; break;
-	}
-	return 0;
 }
 
 uint8_t MIDI_Guess_USB_Msg_Length (uint8_t code_index)
@@ -252,50 +214,50 @@ void sendCtlChange(uint8_t ch, uint8_t ctl, uint8_t value)
 
 void MX_USART1_UART_Init(void)
 {
-  huart1.Instance = USART1;
-  huart1.Init.BaudRate = 31250;
-  huart1.Init.WordLength = UART_WORDLENGTH_8B;
-  huart1.Init.StopBits = UART_STOPBITS_1;
-  huart1.Init.Parity = UART_PARITY_NONE;
-  huart1.Init.Mode = UART_MODE_TX_RX;
-  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart1) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	huart1.Instance = USART1;
+	huart1.Init.BaudRate = 31250;
+	huart1.Init.WordLength = UART_WORDLENGTH_8B;
+	huart1.Init.StopBits = UART_STOPBITS_1;
+	huart1.Init.Parity = UART_PARITY_NONE;
+	huart1.Init.Mode = UART_MODE_TX_RX;
+	huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+	if (HAL_UART_Init(&huart1) != HAL_OK)
+	{
+		Error_Handler();
+	}
 }
 
 void MX_USART2_UART_Init(void)
 {
-  huart2.Instance = USART2;
-  huart2.Init.BaudRate = 31250;
-  huart2.Init.WordLength = UART_WORDLENGTH_8B;
-  huart2.Init.StopBits = UART_STOPBITS_1;
-  huart2.Init.Parity = UART_PARITY_NONE;
-  huart2.Init.Mode = UART_MODE_TX_RX;
-  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart2) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	huart2.Instance = USART2;
+	huart2.Init.BaudRate = 31250;
+	huart2.Init.WordLength = UART_WORDLENGTH_8B;
+	huart2.Init.StopBits = UART_STOPBITS_1;
+	huart2.Init.Parity = UART_PARITY_NONE;
+	huart2.Init.Mode = UART_MODE_TX_RX;
+	huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+	if (HAL_UART_Init(&huart2) != HAL_OK)
+	{
+		Error_Handler();
+	}
 }
 
 void MX_USART3_UART_Init(void)
 {
-  huart3.Instance = USART3;
-  huart3.Init.BaudRate = 31250;
-  huart3.Init.WordLength = UART_WORDLENGTH_8B;
-  huart3.Init.StopBits = UART_STOPBITS_1;
-  huart3.Init.Parity = UART_PARITY_NONE;
-  huart3.Init.Mode = UART_MODE_TX_RX;
-  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart3) != HAL_OK)
-  {
-    Error_Handler();
-  }
+	huart3.Instance = USART3;
+	huart3.Init.BaudRate = 31250;
+	huart3.Init.WordLength = UART_WORDLENGTH_8B;
+	huart3.Init.StopBits = UART_STOPBITS_1;
+	huart3.Init.Parity = UART_PARITY_NONE;
+	huart3.Init.Mode = UART_MODE_TX_RX;
+	huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+	huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+	if (HAL_UART_Init(&huart3) != HAL_OK)
+	{
+		Error_Handler();
+	}
 }
 
 // -----------------------------------------------------------------------------

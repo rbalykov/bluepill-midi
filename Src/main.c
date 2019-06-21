@@ -8,6 +8,7 @@
 #include "usbd_core.h"
 #include "midi_uart.h"
 #include "midi_ringbuffer.h"
+#include "midi_parser.h"
 
 
 static void SystemClock_Config(void);
@@ -22,7 +23,10 @@ int main(void)
 	SystemClock_Config();
 	MX_GPIO_Init();
 
+	MIDI_UART_Parser_Init();
 	MIDI_Init();
+
+	led_off();
 
 	MX_USB_DEVICE_Init();
 

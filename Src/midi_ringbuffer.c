@@ -8,9 +8,6 @@ MIDI_UART_Queue_TypeDef		MIDI_UART_Queue_Tx3;
 MIDI_USB_Queue_TypeDef		MIDI_USB_Queue_DataIn;
 MIDI_USB_Queue_TypeDef		MIDI_USB_Queue_DataOut;
 
-MIDI_UART_RxHandler_TypeDef 	MIDI_UART_Rx_1;
-MIDI_UART_RxHandler_TypeDef 	MIDI_UART_Rx_2;
-MIDI_UART_RxHandler_TypeDef 	MIDI_UART_Rx_3;
 
 // -----------------------------------------------------------------------------
 // --- UART Queue --------------------------------------------------------------
@@ -61,31 +58,6 @@ uint8_t MIDI_UART_Queue_Empty  (MIDI_UART_Queue_TypeDef *queue)
 {
 	return (queue->length == 0);
 }
-
-// -----------------------------------------------------------------------------
-// --- RX Parser ---------------------------------------------------------------
-// -----------------------------------------------------------------------------
-
-void 	MIDI_UART_RxHandler_Init (MIDI_UART_RxHandler_TypeDef *handler)
-{
-	handler->length = 0;
-	memset(handler->data, 0, MIDI_MSG_MAX_SIZE);
-}
-
-void 	MIDI_UART_RxHandler_Push (MIDI_UART_RxHandler_TypeDef *handler, uint8_t byte)
-{
-	if (handler->length >= MIDI_MSG_MAX_SIZE) return;
-	handler->data[handler->length] = byte;
-	handler->length++;
-}
-
-void 	MIDI_UART_RxHandler_MsgStart (MIDI_UART_RxHandler_TypeDef *handler)
-{
-	handler->length = 1;
-	handler->data[0] = handler->rxbuffer[0];
-}
-
-
 
 // -----------------------------------------------------------------------------
 // --- USB Queue ---------------------------------------------------------------

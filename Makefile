@@ -44,6 +44,7 @@ Src/usbd_desc.c \
 Src/usbd_midi.c \
 Src/midi_uart.c \
 Src/midi_ringbuffer.c \
+Src/midi_parser.c \
 Src/stm32f1xx_it.c \
 Src/stm32f1xx_hal_msp.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_gpio_ex.c \

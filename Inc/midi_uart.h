@@ -5,7 +5,9 @@
 extern "C" {
 #endif
 
+#include "stm32f1xx_hal.h"
 #include "midi_ringbuffer.h"
+#include "midi_parser.h"
 
 // -----------------------------------------------------------------------------
 // MIDI 32-bit message, byte 1: cable_id + code_index
@@ -119,17 +121,19 @@ uint8_t 						MIDI_Guess_USB_Msg_Length 	(uint8_t code_index);
 uint8_t 						MIDI_UART_Guess_CableId 	(UART_HandleTypeDef *huart);
 MIDI_UART_Queue_TypeDef* 		MIDI_UART_Guess_TxQueue 	(UART_HandleTypeDef *huart);
 MIDI_UART_Queue_TypeDef* 		MIDI_UART_Guess_TxQueue 	(UART_HandleTypeDef *huart);
-MIDI_UART_RxHandler_TypeDef* 	MIDI_UART_Guess_RxHandler 	(UART_HandleTypeDef *huart);
+MIDI_UART_Parser_TypeDef* 		MIDI_UART_Guess_Parser 		(UART_HandleTypeDef *huart);
 HAL_StatusTypeDef 				MIDI_UART_Receive_IT 		(UART_HandleTypeDef *huart);
 
+extern MIDI_UART_Parser_TypeDef 	MIDI_UART_Rx_1;
+extern MIDI_UART_Parser_TypeDef 	MIDI_UART_Rx_2;
+extern MIDI_UART_Parser_TypeDef 	MIDI_UART_Rx_3;
 
 void 	MIDI_UART_Dispatch_Msg 		(uint8_t *message);
 void 	MIDI_UART_Dispatch 			(void);
 void 	MIDI_UART_TxQueue_Transmit 	(void);
 
-uint8_t* MIDI_UART_RxHandler_USBMessage (MIDI_UART_RxHandler_TypeDef *handler);
+uint8_t* MIDI_UART_RxHandler_USBMessage (MIDI_UART_Parser_TypeDef *handler);
 
-uint8_t MIDI_Guess_UART_Msg_Length 	(uint8_t command);
 uint8_t MIDI_USB_Preamle_Byte 		(uint8_t command, uint8_t length);
 
 
