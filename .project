@@ -35,10 +35,5 @@
 			<type>1</type>
 			<location>/home/pi/devel/neutrino-midi/Src/usbd_midi.c</location>
 		</link>
-		<link>
-			<name>Src/usbd_midi_if.c</name>
-			<type>1</type>
-			<location>/home/pi/devel/neutrino-midi/Src/usbd_midi_if.c</location>
-		</link>
 	</linkedResources>
 </projectDescription>
