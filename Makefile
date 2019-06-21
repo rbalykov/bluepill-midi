@@ -42,7 +42,6 @@ Src/usb_device.c \
 Src/usbd_conf.c \
 Src/usbd_desc.c \
 Src/usbd_midi.c \
-Src/usbd_midi_if.c \
 Src/midi_uart.c \
 Src/midi_ringbuffer.c \
 Src/stm32f1xx_it.c \
