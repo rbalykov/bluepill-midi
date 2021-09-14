@@ -1,7 +1,7 @@
 # neutrino-midi
 
 USB-MIDI interface with three uart/midi ports.
-(c) 2020, GNU GPL v3.
+(c) 2019, GNU GPL v3.
 
 Built on STM32F103C8 (Blue Pill Board).
 
