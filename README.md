@@ -6,8 +6,10 @@ USB-MIDI interface with three uart/midi ports.
 Built on STM32F103C8 (Blue Pill Board).
 
 Compiling:
-git clone; make; st-flash *.hex
+- git clone
+- make
+- make flash
 
 Hardware spec:
-https://learn.sparkfun.com/tutorials/midi-tutorial/hardware--electronic-implementation
-https://www.midi.org/specifications/midi-transports-specifications/5-pin-din-electrical-specs
+- https://learn.sparkfun.com/tutorials/midi-tutorial/hardware--electronic-implementation
+- https://www.midi.org/specifications/midi-transports-specifications/5-pin-din-electrical-specs
