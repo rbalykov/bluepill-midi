@@ -9,4 +9,5 @@ Compiling:
 git clone; make; st-flash *.hex
 
 Hardware spec:
+https://learn.sparkfun.com/tutorials/midi-tutorial/hardware--electronic-implementation
 https://www.midi.org/specifications/midi-transports-specifications/5-pin-din-electrical-specs
