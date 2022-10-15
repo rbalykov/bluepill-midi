@@ -7,7 +7,6 @@
 #include "stm32f1xx_hal_pcd_ex.h"
 
 USBD_HandleTypeDef 		hUsbDeviceFS;
-USBD_ClassTypeDef  		hUsbClassMIDI;
 USBD_MIDI_ItfTypeDef 	hUsbClassMIDI_CB;
 
 void MX_USB_DEVICE_Init(void)
